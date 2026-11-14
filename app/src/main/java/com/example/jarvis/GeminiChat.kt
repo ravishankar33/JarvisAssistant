@@ -1,7 +1,7 @@
 package com.example.jarvis
 
-import org.json.JSONArray
 import org.json.JSONObject
+import org.json.JSONArray
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.Executors
@@ -9,7 +9,7 @@ import java.util.concurrent.Executors
 object GeminiChat {
 
     private val executor = Executors.newSingleThreadExecutor()
-    private val history = JSONArray()
+    private var previousInteractionId: String? = null
 
     fun sendMessage(
         message: String,
@@ -20,24 +20,16 @@ object GeminiChat {
                 val key = BuildConfig.GEMINI_API_KEY
                 require(key.isNotBlank()) { "Gemini API key is missing" }
 
-                val contents = JSONArray()
+                val body = JSONObject()
+                    .put("model", "gemini-3.8-flash")
+                    .put("input", message)
 
-                for (i in 0 until history.length()) {
-                    contents.put(history.getJSONObject(i))
+                previousInteractionId?.let {
+                    body.put("previous_interaction_id", it)
                 }
 
-                val userMessage = JSONObject()
-                    .put("role", "user")
-                    .put("parts", JSONArray().put(
-                        JSONObject().put("text", message)
-                    ))
-
-                contents.put(userMessage)
-
-                val body = JSONObject().put("contents", contents)
-
                 val url = URL(
-                    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+                    "https://generativelanguage.googleapis.com/v1beta/interactions"
                 )
 
                 val connection = url.openConnection() as HttpURLConnection
@@ -67,22 +59,33 @@ object GeminiChat {
                 }
 
                 val response = JSONObject(responseText)
-                val answer = response
-                    .getJSONArray("candidates")
-                    .getJSONObject(0)
-                    .getJSONObject("content")
-                    .getJSONArray("parts")
-                    .getJSONObject(0)
-                    .getString("text")
+                val steps = response.optJSONArray("steps")
+                    ?: throw Exception("No response steps: $responseText")
 
-                history.put(userMessage)
-                history.put(
-                    JSONObject()
-                        .put("role", "model")
-                        .put("parts", JSONArray().put(
-                            JSONObject().put("text", answer)
-                        ))
-                )
+                val answerParts = mutableListOf<String>()
+
+                for (i in 0 until steps.length()) {
+                    val step = steps.getJSONObject(i)
+
+                    if (step.optString("type") == "model_output") {
+                        val content = step.optJSONArray("content") ?: JSONArray()
+
+                        for (j in 0 until content.length()) {
+                            val part = content.getJSONObject(j)
+                            if (part.optString("type") == "text") {
+                                answerParts.add(part.optString("text"))
+                            }
+                        }
+                    }
+                }
+
+                val answer = answerParts.joinToString("\n").trim()
+                if (answer.isBlank()) {
+                    throw Exception("Gemini returned an empty answer")
+                }
+
+                previousInteractionId = response.optString("id")
+                    .takeIf { it.isNotBlank() }
 
                 callback(Result.success(answer))
 
