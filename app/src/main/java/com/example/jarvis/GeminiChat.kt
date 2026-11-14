@@ -37,8 +37,10 @@ object GeminiChat {
                 connection.setRequestProperty("Content-Type", "application/json")
                 connection.setRequestProperty("x-goog-api-key", key)
                 connection.doOutput = true
-                connection.connectTimeout = 20000
-                connection.readTimeout = 60000
+                connection.connectTimeout = 30000
+                connection.readTimeout = 90000
+                connection.setRequestProperty("Connection", "close")
+                connection.setRequestProperty("Accept", "application/json")
 
                 connection.outputStream.use {
                     it.write(body.toString().toByteArray(Charsets.UTF_8))
