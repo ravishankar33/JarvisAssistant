@@ -11,6 +11,8 @@
         <package android:name="com.instagram.android"/>
         <package android:name="com.whatsapp"/>
         <package android:name="com.android.chrome"/>
+        <package android:name="com.snapchat.android"/>
+        <package android:name="com.spotify.music"/>
     </queries>
 
     <application

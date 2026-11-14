@@ -110,8 +110,19 @@ class JarvisForegroundService : Service(), TextToSpeech.OnInitListener {
                 "open whatsapp",
                 "open youtube",
                 "open chrome",
+                "open snapchat",
+                "open snap",
+                "open spotify",
                 "open camera",
                 "open gallery",
+                "open bluetooth",
+                "turn on bluetooth",
+                "turn off bluetooth",
+                "open wifi",
+                "open wi fi",
+                "turn on wifi",
+                "turn off wifi",
+                "open settings",
                 "what time is it",
                 "stop jarvis",
                 "[unk]"
@@ -181,17 +192,21 @@ class JarvisForegroundService : Service(), TextToSpeech.OnInitListener {
         JarvisStateBus.update(lastHeard = command)
 
         if (command.contains("hey jarvis")) {
-            armedUntil = System.currentTimeMillis() + 10000
-            speak("Yes sir")
+            armedUntil = Long.MAX_VALUE
+            speak("Yes sir. I'm listening")
             JarvisStateBus.update(statusText = "Ready for command")
+            return
+        }
+
+        if (command.contains("stop jarvis")) {
+            speak("Stopping Jarvis")
+            stopAssistant()
             return
         }
 
         if (System.currentTimeMillis() > armedUntil) {
             return
         }
-
-        armedUntil = 0L
 
         when {
             command.contains("instagram") -> {
@@ -214,6 +229,31 @@ class JarvisForegroundService : Service(), TextToSpeech.OnInitListener {
                 openApp("com.android.chrome")
             }
 
+            command.contains("snapchat") || command.contains("snap") -> {
+                speak("Opening Snapchat")
+                openApp("com.snapchat.android")
+            }
+
+            command.contains("spotify") -> {
+                speak("Opening Spotify")
+                openApp("com.spotify.music")
+            }
+
+            command.contains("bluetooth") -> {
+                speak("Opening Bluetooth settings")
+                openBluetoothSettings()
+            }
+
+            command.contains("wifi") || command.contains("wi fi") -> {
+                speak("Opening internet settings")
+                openInternetSettings()
+            }
+
+            command.contains("settings") -> {
+                speak("Opening settings")
+                openSettings()
+            }
+
             command.contains("camera") -> {
                 speak("Opening camera")
                 openCamera()
@@ -233,15 +273,44 @@ class JarvisForegroundService : Service(), TextToSpeech.OnInitListener {
                 speak("The time is $time")
             }
 
-            command.contains("stop jarvis") -> {
-                speak("Stopping Jarvis")
-                stopAssistant()
-            }
-
             else -> speak("Command not recognized")
         }
 
-        JarvisStateBus.update(statusText = "Listening for Hey Jarvis")
+        JarvisStateBus.update(statusText = "Listening for your command")
+    }
+
+    private fun openBluetoothSettings() {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: Exception) {
+            speak("Bluetooth settings not available")
+        }
+    }
+
+    private fun openInternetSettings() {
+        try {
+            val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                Intent(android.provider.Settings.Panel.ACTION_INTERNET_CONNECTIVITY)
+            } else {
+                Intent(android.provider.Settings.ACTION_WIFI_SETTINGS)
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: Exception) {
+            speak("Internet settings not available")
+        }
+    }
+
+    private fun openSettings() {
+        try {
+            val intent = Intent(android.provider.Settings.ACTION_SETTINGS)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: Exception) {
+            speak("Settings not available")
+        }
     }
 
     private fun openApp(packageName: String) {
