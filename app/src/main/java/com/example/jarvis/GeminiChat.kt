@@ -4,6 +4,7 @@ import org.json.JSONObject
 import org.json.JSONArray
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.SocketTimeoutException
 import java.util.concurrent.Executors
 
 object GeminiChat {
@@ -12,9 +13,7 @@ object GeminiChat {
     private var previousInteractionId: String? = null
 
     private val models = listOf(
-        "gemini-3.8-flash",
         "gemini-3.7-flash",
-        "gemini-3.6-flash",
         "gemini-3.5-flash-lite"
     )
 
@@ -50,8 +49,8 @@ object GeminiChat {
                         connection.setRequestProperty("x-goog-api-key", key)
                         connection.setRequestProperty("Accept", "application/json")
                         connection.doOutput = true
-                        connection.connectTimeout = 30000
-                        connection.readTimeout = 90000
+                        connection.connectTimeout = 15000
+                        connection.readTimeout = 30000
 
                         connection.outputStream.use {
                             it.write(body.toString().toByteArray(Charsets.UTF_8))
@@ -114,8 +113,13 @@ object GeminiChat {
 
                     } catch (e: Exception) {
                         lastError = e.message ?: "Unknown Gemini error"
-                        if (!lastError.contains("503") &&
-                            !lastError.contains("429")) {
+                        val retryable =
+                            e is SocketTimeoutException ||
+                            lastError.contains("503") ||
+                            lastError.contains("429") ||
+                            lastError.contains("timeout", ignoreCase = true)
+
+                        if (!retryable) {
                             throw e
                         }
                     } finally {
