@@ -22,9 +22,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build APK
-        run: chmod +x gradlew && ./gradlew assembleDebug
-
+      -        - name: Build APK
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: chmod +x gradlew && ./gradlew -PGEMINI_API_KEY="$GEMINI_API_KEY" assembleDebug
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
