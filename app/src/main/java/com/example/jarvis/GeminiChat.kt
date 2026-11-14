@@ -11,6 +11,13 @@ object GeminiChat {
     private val executor = Executors.newSingleThreadExecutor()
     private var previousInteractionId: String? = null
 
+    private val models = listOf(
+        "gemini-3.8-flash",
+        "gemini-3.7-flash",
+        "gemini-3.6-flash",
+        "gemini-3.5-flash-lite"
+    )
+
     fun sendMessage(
         message: String,
         callback: (Result<String>) -> Unit
@@ -20,76 +27,103 @@ object GeminiChat {
                 val key = BuildConfig.GEMINI_API_KEY
                 require(key.isNotBlank()) { "Gemini API key is missing" }
 
-                val body = JSONObject()
-                    .put("model", "gemini-3.8-flash")
-                    .put("input", message)
+                var lastError = "All Gemini models failed"
 
-                previousInteractionId?.let {
-                    body.put("previous_interaction_id", it)
-                }
+                for (model in models) {
+                    var connection: HttpURLConnection? = null
 
-                val url = URL(
-                    "https://generativelanguage.googleapis.com/v1beta/interactions"
-                )
+                    try {
+                        val body = JSONObject()
+                            .put("model", model)
+                            .put("input", message)
 
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "POST"
-                connection.setRequestProperty("Content-Type", "application/json")
-                connection.setRequestProperty("x-goog-api-key", key)
-                connection.doOutput = true
-                connection.connectTimeout = 30000
-                connection.readTimeout = 90000
-                connection.setRequestProperty("Connection", "close")
-                connection.setRequestProperty("Accept", "application/json")
+                        previousInteractionId?.let {
+                            body.put("previous_interaction_id", it)
+                        }
 
-                connection.outputStream.use {
-                    it.write(body.toString().toByteArray(Charsets.UTF_8))
-                }
+                        connection = URL(
+                            "https://generativelanguage.googleapis.com/v1beta/interactions"
+                        ).openConnection() as HttpURLConnection
 
-                val status = connection.responseCode
-                val stream = if (status in 200..299) {
-                    connection.inputStream
-                } else {
-                    connection.errorStream
-                }
+                        connection.requestMethod = "POST"
+                        connection.setRequestProperty("Content-Type", "application/json")
+                        connection.setRequestProperty("x-goog-api-key", key)
+                        connection.setRequestProperty("Accept", "application/json")
+                        connection.doOutput = true
+                        connection.connectTimeout = 30000
+                        connection.readTimeout = 90000
 
-                val responseText = stream.bufferedReader().use { it.readText() }
-                connection.disconnect()
+                        connection.outputStream.use {
+                            it.write(body.toString().toByteArray(Charsets.UTF_8))
+                        }
 
-                if (status !in 200..299) {
-                    throw Exception("Gemini API error $status: $responseText")
-                }
+                        val status = connection.responseCode
+                        val stream = if (status in 200..299) {
+                            connection.inputStream
+                        } else {
+                            connection.errorStream
+                        }
 
-                val response = JSONObject(responseText)
-                val steps = response.optJSONArray("steps")
-                    ?: throw Exception("No response steps: $responseText")
+                        val responseText = stream?.bufferedReader()?.use {
+                            it.readText()
+                        } ?: ""
 
-                val answerParts = mutableListOf<String>()
+                        if (status !in 200..299) {
+                            lastError = "Gemini $model error $status: $responseText"
 
-                for (i in 0 until steps.length()) {
-                    val step = steps.getJSONObject(i)
+                            if (status == 503 || status == 429) {
+                                continue
+                            }
 
-                    if (step.optString("type") == "model_output") {
-                        val content = step.optJSONArray("content") ?: JSONArray()
+                            throw Exception(lastError)
+                        }
 
-                        for (j in 0 until content.length()) {
-                            val part = content.getJSONObject(j)
-                            if (part.optString("type") == "text") {
-                                answerParts.add(part.optString("text"))
+                        val response = JSONObject(responseText)
+                        val steps = response.optJSONArray("steps")
+                            ?: throw Exception("No response steps")
+
+                        val answerParts = mutableListOf<String>()
+
+                        for (i in 0 until steps.length()) {
+                            val step = steps.getJSONObject(i)
+
+                            if (step.optString("type") == "model_output") {
+                                val content = step.optJSONArray("content") ?: JSONArray()
+
+                                for (j in 0 until content.length()) {
+                                    val part = content.getJSONObject(j)
+
+                                    if (part.optString("type") == "text") {
+                                        answerParts.add(part.optString("text"))
+                                    }
+                                }
                             }
                         }
+
+                        val answer = answerParts.joinToString("\n").trim()
+
+                        if (answer.isBlank()) {
+                            throw Exception("Gemini returned an empty answer")
+                        }
+
+                        previousInteractionId = response.optString("id")
+                            .takeIf { it.isNotBlank() }
+
+                        callback(Result.success(answer))
+                        return@execute
+
+                    } catch (e: Exception) {
+                        lastError = e.message ?: "Unknown Gemini error"
+                        if (!lastError.contains("503") &&
+                            !lastError.contains("429")) {
+                            throw e
+                        }
+                    } finally {
+                        connection?.disconnect()
                     }
                 }
 
-                val answer = answerParts.joinToString("\n").trim()
-                if (answer.isBlank()) {
-                    throw Exception("Gemini returned an empty answer")
-                }
-
-                previousInteractionId = response.optString("id")
-                    .takeIf { it.isNotBlank() }
-
-                callback(Result.success(answer))
+                throw Exception("All Gemini models unavailable. $lastError")
 
             } catch (e: Exception) {
                 callback(Result.failure(e))
