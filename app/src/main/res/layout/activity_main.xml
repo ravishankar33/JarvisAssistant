@@ -189,9 +189,8 @@
             android:id="@+id/btnAttach"
             android:layout_width="42dp"
             android:layout_height="46dp"
-            android:text="+"
-            android:textSize="22sp"
-            android:textColor="#55DFFF"
+            android:text=""
+            android:drawableStart="@drawable/ic_add"
             android:backgroundTint="#142C3A"/>
 
         <EditText
@@ -212,8 +211,8 @@
             android:id="@+id/btnMic"
             android:layout_width="42dp"
             android:layout_height="46dp"
-            android:text="🎙"
-            android:textSize="16sp"
+            android:text=""
+            android:drawableStart="@drawable/ic_mic"
             android:backgroundTint="#142C3A"/>
 
         <Button
