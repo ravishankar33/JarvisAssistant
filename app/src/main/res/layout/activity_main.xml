@@ -4,39 +4,69 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp"
+    android:padding="16dp"
     android:background="#101820">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="J.A.R.V.I.S"
-        android:textSize="32sp"
+        android:textSize="28sp"
         android:textStyle="bold"
+        android:gravity="center"
         android:textColor="#00E5FF"/>
 
     <TextView
         android:id="@+id/tvStatus"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Jarvis is idle"
-        android:textSize="18sp"
+        android:textSize="16sp"
+        android:gravity="center"
         android:textColor="#FFFFFF"
-        android:layout_marginTop="30dp"/>
+        android:padding="12dp"/>
 
     <Button
         android:id="@+id/btnStart"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="START JARVIS"
-        android:layout_marginTop="30dp"/>
+        android:text="START JARVIS"/>
 
     <Button
         android:id="@+id/btnStop"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="STOP JARVIS"
-        android:layout_marginTop="12dp"/>
+        android:text="STOP JARVIS"/>
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="12dp"
+        android:background="#1B2835"
+        android:padding="10dp">
+
+        <TextView
+            android:id="@+id/tvChatHistory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="JARVIS: Hello! How can I help you?"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"/>
+    </ScrollView>
+
+    <EditText
+        android:id="@+id/etMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Ask Jarvis anything..."
+        android:textColor="#FFFFFF"
+        android:textColorHint="#AAAAAA"
+        android:singleLine="true"/>
+
+    <Button
+        android:id="@+id/btnSend"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="SEND"/>
 </LinearLayout>
