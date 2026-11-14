@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">JARVIS Assistant</string>
+    <string name="jarvis_accessibility_description">Allows JARVIS to perform voice-controlled navigation and screen interactions when enabled.</string>
 </resources>

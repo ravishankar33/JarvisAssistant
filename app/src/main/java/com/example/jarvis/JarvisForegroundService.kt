@@ -123,6 +123,12 @@ class JarvisForegroundService : Service(), TextToSpeech.OnInitListener {
                 "turn on wifi",
                 "turn off wifi",
                 "open settings",
+                "back",
+                "go back",
+                "press back",
+                "home",
+                "go home",
+                "home screen",
                 "what time is it",
                 "stop jarvis",
                 "[unk]"
@@ -209,6 +215,22 @@ class JarvisForegroundService : Service(), TextToSpeech.OnInitListener {
         }
 
         when {
+            command == "back" || command.contains("go back") || command.contains("press back") -> {
+                if (JarvisAccessibilityService.back()) {
+                    speak("Going back")
+                } else {
+                    speak("Accessibility service is not enabled")
+                }
+            }
+
+            command == "home" || command.contains("go home") || command.contains("home screen") -> {
+                if (JarvisAccessibilityService.home()) {
+                    speak("Going to home")
+                } else {
+                    speak("Accessibility service is not enabled")
+                }
+            }
+
             command.contains("instagram") -> {
                 speak("Opening Instagram")
                 openApp("com.instagram.android")
