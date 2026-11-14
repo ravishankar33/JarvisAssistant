@@ -185,6 +185,15 @@
         android:padding="5dp"
         android:layout_marginTop="10dp">
 
+        <Button
+            android:id="@+id/btnAttach"
+            android:layout_width="42dp"
+            android:layout_height="46dp"
+            android:text="+"
+            android:textSize="22sp"
+            android:textColor="#55DFFF"
+            android:backgroundTint="#142C3A"/>
+
         <EditText
             android:id="@+id/etMessage"
             android:layout_width="0dp"
@@ -198,6 +207,14 @@
             android:background="@android:color/transparent"
             android:padding="10dp"
             android:singleLine="true"/>
+
+        <Button
+            android:id="@+id/btnMic"
+            android:layout_width="42dp"
+            android:layout_height="46dp"
+            android:text="🎙"
+            android:textSize="16sp"
+            android:backgroundTint="#142C3A"/>
 
         <Button
             android:id="@+id/btnSend"

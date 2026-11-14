@@ -1,5 +1,8 @@
 package com.example.jarvis
 
+import android.net.Uri
+import android.speech.RecognizerIntent
+import android.content.Intent
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -25,6 +28,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var btnStart: Button
     private lateinit var btnStop: Button
     private lateinit var btnSend: Button
+    private lateinit var btnAttach: Button
+    private lateinit var btnMic: Button
     private lateinit var btnVoice: Button
     private lateinit var etMessage: EditText
     private lateinit var chatContainer: LinearLayout
@@ -34,6 +39,7 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var tts: TextToSpeech? = null
     private var ttsReady = false
     private var voiceMode = "MALE"
+    private var selectedAttachmentUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +49,8 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         btnStart = findViewById(R.id.btnStart)
         btnStop = findViewById(R.id.btnStop)
         btnSend = findViewById(R.id.btnSend)
+        btnAttach = findViewById(R.id.btnAttach)
+        btnMic = findViewById(R.id.btnMic)
         btnVoice = findViewById(R.id.btnVoice)
         etMessage = findViewById(R.id.etMessage)
         chatContainer = findViewById(R.id.chatContainer)
@@ -77,8 +85,89 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             tvStatus.text = "● JARVIS stopped"
         }
 
+        btnAttach.setOnClickListener { openAttachmentPicker() }
+
+        btnMic.setOnClickListener {
+            startVoiceInput()
+        }
+
         btnSend.setOnClickListener {
             sendChatMessage()
+        }
+    }
+
+    private fun openAttachmentPicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            putExtra(
+                Intent.EXTRA_MIME_TYPES,
+                arrayOf("image/*", "video/*")
+            )
+        }
+
+        try {
+            startActivityForResult(intent, 201)
+        } catch (e: Exception) {
+            tvStatus.text = "● File picker unavailable"
+        }
+    }
+
+    private fun startVoiceInput() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-IN")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to JARVIS")
+        }
+
+        try {
+            startActivityForResult(intent, 200)
+        } catch (e: Exception) {
+            tvStatus.text = "● Speech recognition unavailable"
+        }
+    }
+
+    @Deprecated("Using activity result for compatibility")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == 201 && resultCode == RESULT_OK) {
+            val uri = data?.data
+            if (uri != null) {
+                selectedAttachmentUri = uri
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (_: Exception) {
+                    // Temporary read permission may still be available.
+                }
+
+                val mimeType = contentResolver.getType(uri) ?: ""
+                tvStatus.text = if (mimeType.startsWith("video/")) {
+                    "● Video selected"
+                } else {
+                    "● Photo selected"
+                }
+            }
+            return
+        }
+
+        if (requestCode == 200 && resultCode == RESULT_OK) {
+            val matches = data?.getStringArrayListExtra(
+                RecognizerIntent.EXTRA_RESULTS
+            )
+            val spokenText = matches?.firstOrNull()
+
+            if (!spokenText.isNullOrBlank()) {
+                etMessage.setText(spokenText)
+                etMessage.setSelection(etMessage.text.length)
+                tvStatus.text = "● Voice captured"
+            }
         }
     }
 
@@ -123,21 +212,40 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun sendChatMessage() {
-        val message = etMessage.text.toString().trim()
-        if (message.isEmpty()) return
+        val typedMessage = etMessage.text.toString().trim()
+        val attachment = selectedAttachmentUri
 
-        addMessage(message, true)
+        if (typedMessage.isEmpty() && attachment == null) return
+
+        val message = typedMessage.ifEmpty {
+            "Please analyze this image and describe what you see."
+        }
+
+        val displayMessage = if (attachment != null) {
+            "[Media attached] $message"
+        } else {
+            message
+        }
+
+        addMessage(displayMessage, true)
         etMessage.text.clear()
 
         btnSend.isEnabled = false
         tvStatus.text = "● JARVIS is thinking..."
 
-        GeminiChat.sendMessage(message) { result ->
+        GeminiChat.sendMessage(
+            message,
+            context = this,
+            attachmentUri = attachment
+        ) { result ->
             runOnUiThread {
                 btnSend.isEnabled = true
 
                 result.onSuccess { answer ->
                     addMessage(answer, false)
+                    if (selectedAttachmentUri == attachment) {
+                        selectedAttachmentUri = null
+                    }
                     speakAnswer(answer)
                     tvStatus.text = "● Ready"
                 }

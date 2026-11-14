@@ -1,5 +1,9 @@
 package com.example.jarvis
 
+import android.content.Context
+import android.net.Uri
+import android.util.Base64
+
 import org.json.JSONObject
 import org.json.JSONArray
 import java.net.HttpURLConnection
@@ -19,6 +23,8 @@ object GeminiChat {
 
     fun sendMessage(
         message: String,
+        context: Context? = null,
+        attachmentUri: Uri? = null,
         callback: (Result<String>) -> Unit
     ) {
         executor.execute {
@@ -34,7 +40,46 @@ object GeminiChat {
                     try {
                         val body = JSONObject()
                             .put("model", model)
-                            .put("input", message)
+
+                        if (attachmentUri != null && context != null) {
+                            val mimeType = context.contentResolver.getType(attachmentUri)
+                                ?: throw Exception("Cannot detect selected file type")
+
+                            if (!mimeType.startsWith("image/")) {
+                                throw Exception("Currently, image upload is supported. Video support is coming separately.")
+                            }
+
+                            val imageBytes = context.contentResolver
+                                .openInputStream(attachmentUri)
+                                ?.use { it.readBytes() }
+                                ?: throw Exception("Cannot read selected image")
+
+                            if (imageBytes.size > 14 * 1024 * 1024) {
+                                throw Exception("Image is too large. Choose an image under 14 MB.")
+                            }
+
+                            val imageBase64 = Base64.encodeToString(
+                                imageBytes,
+                                Base64.NO_WRAP
+                            )
+
+                            val input = JSONArray()
+                            input.put(
+                                JSONObject()
+                                    .put("type", "text")
+                                    .put("text", message)
+                            )
+                            input.put(
+                                JSONObject()
+                                    .put("type", "image")
+                                    .put("mime_type", mimeType)
+                                    .put("data", imageBase64)
+                            )
+
+                            body.put("input", input)
+                        } else {
+                            body.put("input", message)
+                        }
 
                         previousInteractionId?.let {
                             body.put("previous_interaction_id", it)
