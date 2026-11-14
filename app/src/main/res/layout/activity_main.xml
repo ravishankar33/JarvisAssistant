@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="14dp"
-    android:background="#05070B">
+    android:background="#05080D"
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:padding="10dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="J.A.R.V.I.S"
-            android:textColor="#45D9FF"
+            android:textColor="#55DFFF"
             android:textSize="25sp"
             android:textStyle="bold"
-            android:letterSpacing="0.12"/>
+            android:letterSpacing="0.18"/>
 
         <Button
             android:id="@+id/btnVoice"
             android:layout_width="wrap_content"
             android:layout_height="42dp"
             android:text="VOICE"
-            android:textColor="#45D9FF"
-            android:backgroundTint="#142630"/>
-
+            android:textSize="11sp"
+            android:textColor="#55DFFF"
+            android:backgroundTint="#142C3A"/>
     </LinearLayout>
 
     <TextView
@@ -40,25 +40,83 @@
         android:layout_height="wrap_content"
         android:text="● SYSTEM ONLINE"
         android:textColor="#39D98A"
-        android:textSize="12sp"
-        android:paddingStart="12dp"
-        android:paddingBottom="12dp"/>
+        android:textSize="11sp"
+        android:letterSpacing="0.12"
+        android:gravity="center"
+        android:padding="5dp"/>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="174dp"
+        android:layout_marginTop="4dp">
+
+        <View
+            android:layout_width="148dp"
+            android:layout_height="148dp"
+            android:layout_gravity="center"
+            android:background="@drawable/jarvis_orb_outer"/>
+
+        <FrameLayout
+            android:layout_width="122dp"
+            android:layout_height="122dp"
+            android:layout_gravity="center"
+            android:background="@drawable/jarvis_orb_inner">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="J"
+                    android:textColor="#8BEAFF"
+                    android:textSize="48sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AI CORE"
+                    android:textColor="#55DFFF"
+                    android:textSize="9sp"
+                    android:letterSpacing="0.25"/>
+            </LinearLayout>
+        </FrameLayout>
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="PERSONAL AI ASSISTANT"
+        android:textColor="#68869A"
+        android:textSize="10sp"
+        android:gravity="center"
+        android:letterSpacing="0.2"
+        android:paddingBottom="10dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:paddingBottom="12dp">
+        android:paddingBottom="10dp">
 
         <Button
             android:id="@+id/btnStart"
             android:layout_width="0dp"
             android:layout_height="44dp"
             android:layout_weight="1"
-            android:text="START JARVIS"
+            android:text="START LISTENING"
+            android:textSize="11sp"
             android:textColor="#FFFFFF"
             android:backgroundTint="#087F9F"/>
+
+        <Space
+            android:layout_width="10dp"
+            android:layout_height="1dp"/>
 
         <Button
             android:id="@+id/btnStop"
@@ -66,10 +124,21 @@
             android:layout_height="44dp"
             android:layout_weight="1"
             android:text="STOP"
+            android:textSize="11sp"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#343B46"/>
-
+            android:backgroundTint="#293541"/>
     </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CONVERSATION"
+        android:textColor="#55DFFF"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.16"
+        android:paddingTop="5dp"
+        android:paddingBottom="7dp"/>
 
     <ScrollView
         android:id="@+id/chatScroll"
@@ -77,7 +146,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fillViewport="true"
-        android:background="#090D13"
+        android:background="#090F17"
         android:padding="10dp">
 
         <LinearLayout
@@ -88,30 +157,22 @@
             android:padding="5dp">
 
             <TextView
-                android:id="@+id/tvChatHistory"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:visibility="gone"/>
-
-            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="JARVIS"
-                android:textColor="#45D9FF"
+                android:textColor="#55DFFF"
                 android:textStyle="bold"
-                android:textSize="13sp"/>
+                android:textSize="11sp"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Hello! I'm online. How can I help you?"
+                android:text="Systems online. How may I assist you?"
                 android:textColor="#E8F1F8"
-                android:textSize="15sp"
-                android:background="#17212B"
-                android:padding="14dp"
-                android:layout_marginTop="6dp"
-                android:layout_marginBottom="12dp"/>
-
+                android:textSize="14sp"
+                android:background="#172633"
+                android:padding="13dp"
+                android:layout_marginTop="5dp"/>
         </LinearLayout>
     </ScrollView>
 
@@ -120,9 +181,9 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:background="#151D27"
-        android:padding="6dp"
-        android:layout_marginTop="12dp">
+        android:background="@drawable/jarvis_input_bg"
+        android:padding="5dp"
+        android:layout_marginTop="10dp">
 
         <EditText
             android:id="@+id/etMessage"
@@ -130,10 +191,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:minHeight="48dp"
-            android:hint="Message Jarvis..."
+            android:hint="Message JARVIS..."
             android:textColor="#FFFFFF"
-            android:textColorHint="#8A9AA9"
-            android:textSize="15sp"
+            android:textColorHint="#8195A5"
+            android:textSize="14sp"
             android:background="@android:color/transparent"
             android:padding="10dp"
             android:singleLine="true"/>
@@ -141,11 +202,11 @@
         <Button
             android:id="@+id/btnSend"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="46dp"
             android:text="SEND"
+            android:textSize="11sp"
             android:textColor="#FFFFFF"
             android:backgroundTint="#087F9F"/>
-
     </LinearLayout>
 
 </LinearLayout>
