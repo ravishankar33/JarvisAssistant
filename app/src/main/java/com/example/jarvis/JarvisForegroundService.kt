@@ -384,7 +384,11 @@ class JarvisForegroundService : Service(), TextToSpeech.OnInitListener {
 
     private fun stopAssistant() {
         running.set(false)
-        releaseAudio()
+
+        try {
+            recorder?.stop()
+        } catch (_: Exception) {
+        }
 
         JarvisStateBus.update(
             isRunning = false,
@@ -448,7 +452,12 @@ class JarvisForegroundService : Service(), TextToSpeech.OnInitListener {
 
     override fun onDestroy() {
         running.set(false)
-        releaseAudio()
+
+        try {
+            recorder?.stop()
+        } catch (_: Exception) {
+        }
+
         tts?.stop()
         tts?.shutdown()
         tts = null
